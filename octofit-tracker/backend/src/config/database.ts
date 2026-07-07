@@ -1,18 +1,19 @@
 import mongoose from 'mongoose';
 
 const connectionString = process.env.MONGODB_URI || 'mongodb://localhost:27017/octofit_db';
-const db = mongoose.connection;
 
-mongoose
-  .connect(connectionString)
-  .then(() => {
-    console.log('Connected to octofit_db');
-  })
-  .catch((error) => {
-    console.error('Error connecting to octofit_db:', error);
-    process.exit(1);
-  });
+let connectionPromise: Promise<typeof mongoose> | null = null;
 
-db.on('error', console.error.bind(console, 'connection error:'));
+export async function connectToDatabase() {
+  if (!connectionPromise) {
+    mongoose.set('strictQuery', true);
+    connectionPromise = mongoose.connect(connectionString);
+  }
 
-export default db;
+  await connectionPromise;
+  return mongoose.connection;
+}
+
+export function getDatabaseConnection() {
+  return mongoose.connection;
+}
